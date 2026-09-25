@@ -28,6 +28,22 @@ Produza uma peça com assunto sugerido, pré-cabeçalho e HTML independente. Ent
 - Abra o HTML em viewport estreito e largo; confira imagem, leitura, botão e ausência de rolagem horizontal. Um preview local não prova a renderização no ActiveCampaign: peça um envio de teste pelo AC antes de programar a campanha.
 - Diga claramente se entregou só o arquivo ou se uma automação/envio foi de fato configurado.
 
+## Operação no ActiveCampaign (rascunhos via API v3)
+
+Criar rascunho de campanha por código, sem encostar no que já foi enviado:
+
+1. Casca: `POST /api/3/campaign` com `{"type": "single", "name": "...", "canSplitContent": false}` → retorna `id`. (O endpoint plural `/campaigns` exige `listIds` + `messages` inline e devolve 422 — não usar para criar.)
+2. Mensagem: `POST /api/3/messages` com `subject`, `fromname`, `fromemail`, `reply2`, `html`, `text` → retorna `message.id`.
+3. Vínculo: `POST /api/3/campaignMessages` com `{"campaignMessage": {"campaignid": ..., "messageid": ...}}`.
+4. Conferência: `GET /api/3/campaigns/{id}` deve mostrar `status: "0"` (rascunho) e `GET campaigns/{id}/campaignMessage` o assunto linkado.
+
+Limites reais da API (validados em 2026-09):
+
+- Associar lista é só pelo painel — `campaignLists` aceita apenas GET. Escolha a lista na UI antes de qualquer teste de envio.
+- `PUT /api/3/messages/{id}` atualiza HTML/texto de rascunho sem criar peça nova; o original nunca é alterado ao copiar (ler o HTML dele e gravar na mensagem do rascunho).
+- Marque rascunhos de teste com `[TESTE]` no nome/assunto para ninguém confundir no painel.
+- Nunca programe nem dispare envio sem pedido explícito do usuário; rascunho ≠ autorização.
+
 ## Referências deste processo
 
 - [Boas-vindas da lista de abertura](references/boas-vindas-activecampaign.html): confirmação imediata, convite ao calendário e link da sala discreto.
